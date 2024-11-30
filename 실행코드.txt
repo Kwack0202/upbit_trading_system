@@ -1,0 +1,3 @@
+conda activate upbit
+cd C:\python_code\upbit_trading_system
+python __init__.py --version v3
