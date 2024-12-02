@@ -35,8 +35,8 @@ class Upbit_trading_system(QAxWidget):
         self.upper_change_rate = 10.0        
         
         # 조건 3. 최근 거래 내역에서 전일 대비 등락 폭 
-        self.lower_excessive_volatility = 10.0
-        self.upper_excessive_volatility = 20.0        
+        self.lower_excessive_volatility = 20.0
+        self.upper_excessive_volatility = 35.0        
         
         # 일정 시간 매수 신호가 포착되지 않을 경우 종목 변경을 위한 타이머
         self.targeting_timer = 3         
@@ -171,7 +171,7 @@ class Upbit_trading_system(QAxWidget):
             self.krw_balance = int(float(self.krw_data[0]['balance'])) if self.krw_data else None
             
             # 거래 대상 ticker 정보 조회 및 보유량 load
-            self.target_ticker_data = [item for item in self.balance if item['currency'] != 'KRW' and float(item['avg_buy_price']) >= 1 and float(item['balance']) >= 1]
+            self.target_ticker_data = [item for item in self.balance if item['currency'] != 'KRW' and float(item['avg_buy_price']) >= 0.0001 and float(item['balance']) >= 1]
             self.target_balance = float(self.target_ticker_data[0]['balance']) if self.target_ticker_data else None
            
             # 거래 대상 ticer를 보유한 경우 
@@ -545,7 +545,7 @@ class Upbit_trading_system(QAxWidget):
                     self.krw_balance = int(float(self.krw_data[0]['balance'])) if self.krw_data else None
                     
                     # 거래 대상 ticker 정보 조회 및 보유량 load
-                    self.target_ticker_data = [item for item in self.balance if item['currency'] != 'KRW' and float(item['avg_buy_price']) >= 1 and float(item['balance']) >= 1]
+                    self.target_ticker_data = [item for item in self.balance if item['currency'] != 'KRW' and float(item['avg_buy_price']) >= 0.0001 and float(item['balance']) >= 1]
                     self.target_balance = float(self.target_ticker_data[0]['balance']) if self.target_ticker_data else None
                     
                     if final_trend == "down":
@@ -662,7 +662,7 @@ class Upbit_trading_system(QAxWidget):
                     self.krw_balance = int(float(self.krw_data[0]['balance'])) if self.krw_data else None
                     
                     # 거래 대상 ticker 정보 조회 및 보유량 load
-                    self.target_ticker_data = [item for item in self.balance if item['currency'] != 'KRW' and float(item['avg_buy_price']) >= 1 and float(item['balance']) >= 1]
+                    self.target_ticker_data = [item for item in self.balance if item['currency'] != 'KRW' and float(item['avg_buy_price']) >= 0.0001 and float(item['balance']) >= 1]
                     self.target_balance = float(self.target_ticker_data[0]['balance']) if self.target_ticker_data else None
 
                     # 거래 대상 ticer를 보유한 경우 
@@ -1186,7 +1186,7 @@ class Upbit_trading_system(QAxWidget):
                     # 이미 모든 시드가 진입된 상태이므로 원화 정보는 조회하지 않습니다
                                         
                     # 거래 대상 ticker 정보 조회 및 보유량 load
-                    self.target_ticker_data = [item for item in self.balance if item['currency'] != 'KRW' and float(item['avg_buy_price']) >= 1 and float(item['balance']) >= 1]
+                    self.target_ticker_data = [item for item in self.balance if item['currency'] != 'KRW' and float(item['avg_buy_price']) >= 0.0001 and float(item['balance']) >= 1]
                     self.target_balance = float(self.target_ticker_data[0]['balance']) if self.target_ticker_data else None
 
                     # 거래 대상 ticer를 보유한 경우 
