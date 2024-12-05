@@ -27,8 +27,11 @@ class Upbit_trading_system(QAxWidget):
         1. 종목 탐색 변수 지정
         ==============================================
         '''
+        
+        self.excluded_tickers = ['KRW-BTC', 'KRW-ETH', 'KRW-USDT', 'KRW-SOL']
+        
         # 조건 1. 24시간 거래량
-        self.volume = 50000 * 1000000 
+        self.volume = 70000 * 1000000
         
         # 조건 2. 당일 등락률
         self.lower_change_rate = -5.0
@@ -39,7 +42,7 @@ class Upbit_trading_system(QAxWidget):
         self.upper_excessive_volatility = 35.0        
         
         # 일정 시간 매수 신호가 포착되지 않을 경우 종목 변경을 위한 타이머
-        self.targeting_timer = 3         
+        self.targeting_timer = 30         
         '''
         ==============================================
         2. 시간봉 단위 및 추세 판단 기간 설정
@@ -47,19 +50,19 @@ class Upbit_trading_system(QAxWidget):
         '''
         self.time_frame = 5 # 시간봉 단위 (예 : 5, 10, 15, 30, 60)
                 
-        self.long_period = 24  # 예: 24 (24시간)
-        self.medium_period = 12  # 예: 12 (12시간)
-        self.short_period = 6  # 예: 6 (6시간)
+        self.long_period = 12  # 예: 24 (24시간)
+        self.medium_period = 6  # 예: 12 (12시간)
+        self.short_period = 3  # 예: 6 (6시간)
         '''
         ==============================================
         3. 손절 및 익절 기준 변수 설정 (표준편차 값)
         ==============================================
         '''
-        self.num_SLTP = 8  # 익절기준 표준편차
-        self.num_SLTP_uptrend = 10 # 익절기준 상승장
+        self.num_SLTP = 10  # 익절기준 표준편차
+        self.num_SLTP_uptrend = 12 # 익절기준 상승장
         
-        self.num_SLTP_overrated = 4  # 고평가 익절기준 표준편차
-        self.num_SLTP_overrated_uptrend = 6 # 고평가 익절기준 상승장
+        self.num_SLTP_overrated = 6  # 고평가 익절기준 표준편차
+        self.num_SLTP_overrated_uptrend = 8 # 고평가 익절기준 상승장
         '''
         ==============================================
         4. 포지션 진입 및 청산에 사용할 기준 변수
@@ -67,12 +70,12 @@ class Upbit_trading_system(QAxWidget):
         '''
         # 1차 포지션 기준 (매수 기준만 존재)
         self.first_buy_rsi_fanic = 20 # 매수 기준(패닉셀)
-        self.first_buy_rsi = 30 # 매수 기준 (횡보장, 상승장)
+        self.first_buy_rsi = 25 # 매수 기준 (횡보장, 상승장)
         
         # 2차 포지션 기준 (매수 + 매도 기준)
         self.second_buy_rsi_fanic_real = 15 # 매수 기준(ㄹㅇ패닉셀)
         self.second_buy_rsi_fanic = 20 # 매수 기준(패닉셀)        
-        self.second_buy_rsi = 30 # 매수 기준 (횡보장)
+        self.second_buy_rsi = 25 # 매수 기준 (횡보장)
 
         self.second_sell_rsi = 70 # 매도 기준 (횡보장)
         self.second_sell_rsi_uptrend = 75 # 매도 기준(상승장)
@@ -263,10 +266,8 @@ class Upbit_trading_system(QAxWidget):
         print(f"조건2: 등락률 {self.lower_change_rate}% 이상, {self.upper_change_rate}% 이하")
         server_url = "https://api.upbit.com"
 
-        excluded_tickers = ['KRW-BTC', 'KRW-ETH', 'KRW-USDT']
-
         params = {
-            "markets": [ticker for ticker in pyupbit.get_tickers(fiat='KRW') if ticker not in excluded_tickers]
+            "markets": [ticker for ticker in pyupbit.get_tickers(fiat='KRW') if ticker not in self.excluded_tickers]
         }
 
         res = requests.get(server_url + "/v1/ticker", params=params)
@@ -311,7 +312,7 @@ class Upbit_trading_system(QAxWidget):
             print(f"\nTarget ticker로 선정된 코인: {self.target_ticker}\n")
             
             # 최근 과도한 수준으로 등락된 경우를 체크
-            ohlcv = pyupbit.get_ohlcv(self.target_ticker, "day1", count=5)
+            # ohlcv = pyupbit.get_ohlcv(self.target_ticker, "day1", count=5)
         
             '''
             [최종 거래 대상 선정을 위한 조건 목록]
@@ -320,7 +321,7 @@ class Upbit_trading_system(QAxWidget):
             조건 2 - 현재 가격이 전일 대비 일정 수준 하락하지 않았어야 함 (예 : 20%)
     
             ''' 
-            for i in range(1, len(ohlcv)):
+            ''' for i in range(1, len(ohlcv)):
                 
                 previous_high = ohlcv.iloc[i-1]['high'] # 전일 고가
                 previous_low = ohlcv.iloc[i-1]['low'] # 전일 저가
@@ -332,7 +333,7 @@ class Upbit_trading_system(QAxWidget):
                 if (previous_high_change_rate >= self.upper_excessive_volatility or previous_low_change_rate >= self.lower_excessive_volatility):
                     print(f"\n{self.target_ticker}는 최근 하루만에 {self.upper_excessive_volatility}% 이상 상승했거나 {self.lower_excessive_volatility}이상 하락했습니다. 새로운 종목을 선정합니다.\n")
                     return self.select_target_ticker()  # 새로운 종목 선정
-
+ '''
             # 거래 대상이 적합한 경우
             self.ticker_selected_time = datetime.datetime.now()  # 타이머 시작
             self.trade_occurred_since_selection = False  # 거래 발생 여부 초기화
@@ -1503,8 +1504,8 @@ class Upbit_trading_system(QAxWidget):
                 # 일정시간 동안 거래 신호가 발생하지 않았으면 새로운 코인 선택
                 if self.ticker_selected_time:
                     elapsed_time = (datetime.datetime.now() - self.ticker_selected_time).total_seconds()
-                    if elapsed_time > self.targeting_timer * 60 and not self.trade_occurred_since_selection:
-                        print(f"\n{int(self.targeting_timer)}분 동안 거래 신호가 발생하지 않았습니다. 새로운 거래 대상 코인을 선정합니다.\n")
+                    if elapsed_time > self.targeting_timer and not self.trade_occurred_since_selection:
+                        print(f"\n{int(self.targeting_timer)}초 동안 거래 신호가 발생하지 않았습니다. 새로운 거래 대상 코인을 선정합니다.\n")
                         self.select_target_ticker()
                                             
                         # 추가로 포지션을 초기화할 필요가 있을 수 있습니다.
