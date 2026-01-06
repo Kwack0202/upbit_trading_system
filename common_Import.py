@@ -3,6 +3,7 @@ import pyupbit
 from PyQt5.QAxContainer import QAxWidget  # QAxWidget을 사용하기 위해 임포트
 from PyQt5.QtWidgets import QApplication
 
+import os
 import pandas as pd
 import numpy as np
 
@@ -29,3 +30,5 @@ from mplfinance.original_flavor import candlestick2_ohlc, volume_overlay
 import talib
 import requests
 import random
+
+import json

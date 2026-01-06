@@ -12,6 +12,11 @@ class Ui_class():
             from upbit.upbit_tradingv2 import Upbit_trading_system
         elif version == 'v3':
             from upbit.upbit_tradingv3 import Upbit_trading_system
+        elif version == 'v4':
+            from upbit.upbit_tradingv4 import Upbit_trading_system 
+        elif version == 'v5':
+            from upbit.upbit_tradingv5 import Upbit_trading_system    
+           
         else:
             raise ValueError("지원되지 않는 버전입니다.")
         

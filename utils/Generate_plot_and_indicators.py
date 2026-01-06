@@ -102,7 +102,7 @@ def plot_candles(pricing, title=None, trend_line=False, mean_std_line=False, vol
     elif ax is None:
         return fig, ax1
     else:
-        return ax1  # When ax is provided, just return ax1
+        return ax1
 
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -115,10 +115,10 @@ def generate_technical_analysis_indicators(df):
 
     '''
     # 볼린저 밴드
-    df['BBAND_UPPER'],df['BBAND_MIDDLE'],df['BBAND_lOWER'] = talib.BBANDS(df['close'], 20, 2)
+    df['BBAND_UPPER'],df['BBAND_MIDDLE'],df['BBAND_LOWER'] = talib.BBANDS(df['close'], 20, 1.4)
     
     # 모멘텀
-    df['MOM'] = talib.MOM(df["close"], timeperiod=10)
+    # df['MOM'] = talib.MOM(df["close"], timeperiod=10)
     
     # DMI
     #df['DMI'] = talib.DX(df["high"], df["low"], df["close"], timeperiod=14)
@@ -136,11 +136,17 @@ def generate_technical_analysis_indicators(df):
     #df['CCI'] = talib.CCI(df["high"], df["low"], df["close"], timeperiod=9)
     
     # RSI (원래는 14가 기본값으로 제공되지만 우리는 12로 사용함)
-    df['RSI'] = talib.RSI(df["close"], timeperiod=12)
+    # df['RSI'] = talib.RSI(df["close"], timeperiod=10)
     
     # Stochastic
-    #df['slowk'], df['slowd'] = talib.STOCH(df["high"], df["low"], df["close"], fastk_period=12, slowk_period=5, slowk_matype=0, slowd_period=5, slowd_matype=0)
-    #df['fastk'], df['fastd'] = talib.STOCHF(df["high"], df["low"], df["close"], fastk_period=12, fastd_period=5, fastd_matype=0)
+    df['slowk'], df['slowd'] = talib.STOCH(df["high"], df["low"], df["close"], fastk_period=14, slowk_period=3, slowk_matype=0, slowd_period=3, slowd_matype=0)
+    # df['fastk'], df['fastd'] = talib.STOCHF(df["high"], df["low"], df["close"], fastk_period=14, fastd_period=3, fastd_matype=0)
+    
+    # William R%
+    df['WR'] = talib.WILLR(df['high'], df["low"], df["close"], timeperiod=14)
+    
+    # MACD
+    df['MACD'], df['MACD_signal'], _ = talib.MACD(df['close'], fastperiod = 3, slowperiod = 10, signalperiod = 9)
     
     # Chande Momentum Oscilator
     #df['CMO'] = talib.CMO(df["close"], timeperiod=9)
@@ -154,6 +160,7 @@ def generate_technical_analysis_indicators(df):
     #df['BOP'] = talib.BOP(df['open'], df['high'], df['low'], df['close'])
     
     return df
+
 
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------

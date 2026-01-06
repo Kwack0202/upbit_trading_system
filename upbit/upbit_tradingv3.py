@@ -31,7 +31,7 @@ class Upbit_trading_system(QAxWidget):
         self.excluded_tickers = ['KRW-BTC', 'KRW-ETH', 'KRW-USDT', 'KRW-SOL']
         
         # 조건 1. 24시간 거래량
-        self.volume = 70000 * 1000000
+        self.volume = 50000 * 1000000
         
         # 조건 2. 당일 등락률
         self.lower_change_rate = -5.0
@@ -42,7 +42,8 @@ class Upbit_trading_system(QAxWidget):
         self.upper_excessive_volatility = 35.0        
         
         # 일정 시간 매수 신호가 포착되지 않을 경우 종목 변경을 위한 타이머
-        self.targeting_timer = 30         
+        self.targeting_timer = 15         
+        
         '''
         ==============================================
         2. 시간봉 단위 및 추세 판단 기간 설정
@@ -50,9 +51,9 @@ class Upbit_trading_system(QAxWidget):
         '''
         self.time_frame = 5 # 시간봉 단위 (예 : 5, 10, 15, 30, 60)
                 
-        self.long_period = 12  # 예: 24 (24시간)
-        self.medium_period = 6  # 예: 12 (12시간)
-        self.short_period = 3  # 예: 6 (6시간)
+        self.long_period = 24  # 예: 24 (24시간)
+        self.medium_period = 12  # 예: 12 (12시간)
+        self.short_period = 6  # 예: 6 (6시간)
         '''
         ==============================================
         3. 손절 및 익절 기준 변수 설정 (표준편차 값)
@@ -69,13 +70,13 @@ class Upbit_trading_system(QAxWidget):
         ==============================================
         '''
         # 1차 포지션 기준 (매수 기준만 존재)
-        self.first_buy_rsi_fanic = 20 # 매수 기준(패닉셀)
-        self.first_buy_rsi = 25 # 매수 기준 (횡보장, 상승장)
+        self.first_buy_rsi_fanic = 15 # 매수 기준(패닉셀)
+        self.first_buy_rsi = 23 # 매수 기준 (횡보장, 상승장)
         
         # 2차 포지션 기준 (매수 + 매도 기준)
-        self.second_buy_rsi_fanic_real = 15 # 매수 기준(ㄹㅇ패닉셀)
-        self.second_buy_rsi_fanic = 20 # 매수 기준(패닉셀)        
-        self.second_buy_rsi = 25 # 매수 기준 (횡보장)
+        self.second_buy_rsi_fanic_real = 10 # 매수 기준(ㄹㅇ패닉셀)
+        self.second_buy_rsi_fanic = 15 # 매수 기준(패닉셀)        
+        self.second_buy_rsi = 23 # 매수 기준 (횡보장)
 
         self.second_sell_rsi = 70 # 매도 기준 (횡보장)
         self.second_sell_rsi_uptrend = 75 # 매도 기준(상승장)
@@ -142,7 +143,7 @@ class Upbit_trading_system(QAxWidget):
     # ----------------------------------------------------------------------------------
     # 업비트 계좌 로그인 
     def upbit_login(self):
-        try:
+        try:    
             with open('./upbit_login.txt') as f:
                 lines = f.readlines()
             access_key = lines[0].strip()
@@ -439,8 +440,8 @@ class Upbit_trading_system(QAxWidget):
 
                 # ------------------------------------------------------------------------------------------------------
                 # 고평가 손절매 조건 적용: 항상 음수이며 -3.0 초과, -10.0 이하
-                if not (-10.0 <= self.stop_loss_overrated <= -2.0):
-                    self.stop_loss_overrated = -3.5
+                if not (-10.0 <= self.stop_loss_overrated <= -3.0):
+                    self.stop_loss_overrated = -5.0
 
                 # 고평가 익절매 조건 적용: 항상 양수이며 3.0 미만, 10.0 이상 아님
                 if not (2.0 <= self.take_profit_overrated < 10.0):
@@ -614,14 +615,15 @@ class Upbit_trading_system(QAxWidget):
                             print(f"{current_time} | Ticker : {self.target_ticker} | Final Trend : {final_trend} | 포지션 진입 비율 {self.seed_ratio * 100}% | 현재 횡보장에서 매수조건이 모두 충족되지 않아 포지션 진입을 하지 않습니다")
                         
                     elif final_trend == "up":
-                        if rsi <= self.first_buy_rsi and ema_10 < ema_20:
+                        if close <= bband_lower and rsi <= self.first_buy_rsi and ema_10 < ema_20:
                             
                             print(f"\n매수 신호 발생\n")
                             print(f"\n상승장\n")
                             
                             print("<Technical Analysis>")
-                            print(f"매수 조건 1 : RSI({rsi:.2f})가 매수기준({self.first_buy_rsi}) 이하")
-                            print(f"매수 조건 2 : 이평선 정렬(단기 : {ema_10:.2f} 중기 : {ema_20:.2f})")
+                            print(f"매수 조건 1 : 현재가격({close})이 볼린저밴드의 하단({bband_lower:.2f})을 터치")
+                            print(f"매수 조건 2 : RSI({rsi:.2f})가 매수기준({self.first_buy_rsi}) 이하")
+                            print(f"매수 조건 3 : 이평선 정렬(단기 : {ema_10:.2f} 중기 : {ema_20:.2f})")
                             
                             buy_price = (self.krw_balance / 2) * (1 - self.pee)
                             self.upbit.buy_market_order(self.target_ticker, buy_price)
@@ -950,7 +952,7 @@ class Upbit_trading_system(QAxWidget):
                             print("!!!   매도성공   !!!")
                             print("+------------------+")    
                         
-                        elif close <= bband_lower and rsi <= self.second_buy_rsi and ema_10 <  ema_20 and self.profit_rate < self.stop_loss_overrated:
+                        elif close <= bband_lower and rsi <= self.second_buy_rsi and ema_10 < ema_20 and self.profit_rate < self.stop_loss_overrated:
                             
                             print(f"\n추가 매수 신호 발생\n")
                             print(f"\n횡보장\n")
